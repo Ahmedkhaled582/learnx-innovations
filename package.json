@@ -1,0 +1,38 @@
+{
+  "name": "edudash-admin",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "sync-assets": "node scripts/sync-assets.mjs",
+    "convert": "node scripts/convert-html.mjs",
+    "predev": "node scripts/sync-assets.mjs",
+    "prebuild": "node scripts/sync-assets.mjs",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "^15.3.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "^15.3.2",
+    "typescript": "^5.8.3"
+  },
+  "eslintConfig": {
+    "extends": ["next/core-web-vitals"],
+    "rules": {
+      "@next/next/no-html-link-for-pages": "off",
+      "@next/next/no-css-tags": "off",
+      "@next/next/no-img-element": "off",
+      "@next/next/no-before-interactive-script-outside-document": "off",
+      "react/no-unescaped-entities": "off"
+    }
+  }
+}

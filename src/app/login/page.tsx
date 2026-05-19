@@ -1,0 +1,123 @@
+import ThemeCustomization from "@/components/ThemeCustomization";
+import MobileOverlay from "@/components/MobileOverlay";
+
+export default function LoginPage() {
+  return (
+    <>
+      <ThemeCustomization />
+      <MobileOverlay />
+      <div className="d-lg-flex bg-white">
+          <div className="w-50 d-lg-flex d-none overflow-hidden">
+              <img src="/assets/images/thumbs/login-img.png" alt="Login Image" className="w-100 h-100 object-fit-cover" />
+          </div>
+          <div className="lg-w-50 px-24 py-32 d-flex justify-content-center align-items-center">
+              <div className="max-w-540-px mx-auto">
+                  <a href="/" className="">
+                      <img src="/assets/images/logo.png" alt="Logo" />
+                  </a>
+                  <div className="mt-32 mb-32">
+                      <h1 className="h6 fw-bold text-primary-light mb-8">
+                          Welcome Back 👋
+                      </h1>
+                      <p className="text-sm text-secondary-light mb-0">
+                          Log in to your account to continue
+                      </p>
+                  </div>
+                  <form action="#" className="d-flex flex-column gap-32 submit-form">
+                      <div className="d-flex flex-column gap-16">
+                          <div>
+                              <label htmlFor="email" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                                  Email Address
+                                  <span className="text-danger-600">*</span>
+                              </label>
+                              <input type="email" id="email" className="email-field form-control" placeholder="Enter your email"  />
+                          </div>
+      
+                          <div>
+                              <label htmlFor="password" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                                  Password
+                                  <span className="text-danger-600">*</span>
+                              </label>
+                              <div className="position-relative">
+                                  <input type="password" id="password" className="password-field form-control" placeholder="Enter your password"
+                                       />
+                                  <button type="button"
+                                      className="toggle-password btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light cursor-pointer ri-eye-line"
+                                      data-toggle="#password" aria-label="Toggle password visibility">
+                                  </button>
+                              </div>
+                          </div>
+                      </div>
+                      <div className="d-flex justify-content-between gap-2">
+                          <div className="form-check style-check d-flex align-items-center">
+                              <input className="form-check-input border border-neutral-400" type="checkbox" value="" id="remeber" />
+                              <label className="form-check-label" htmlFor="remeber">Remember me </label>
+                          </div>
+                          <a href="javascript:void(0)" className="text-primary-600 fw-medium text-decoration-underline">Forgot
+                              Password?</a>
+                      </div>
+                      <div className="">
+                          <button type="submit" className="loginBtn btn btn-primary-600 text-sm btn-sm px-12 py-16 w-100 radius-8"> Log In
+                          </button>
+                      </div>
+                      <div className="text-center text-sm text-secondary-light">
+                          or login as
+                      </div>
+                      <div className="d-grid sm-grid-cols-3 grid-cols-2 gap-16">
+                          <a href="javascript:void(0)"
+                              className="d-flex align-items-center gap-8 fw-semibold text-sm radius-6 justify-content-center flex-grow-1 bg-success text-white py-10 px-8">
+                              <span className="d-flex">
+                                  <img src="/assets/images/icons/sheild-icon.png" alt="Icon" />
+                              </span>
+                              <span className="">Supper Admin</span>
+                          </a>
+                          <a href="javascript:void(0)"
+                              className="d-flex align-items-center gap-8 fw-semibold text-sm radius-6 justify-content-center flex-grow-1 bg-info-600 text-white py-10 px-8">
+                              <span className="d-flex">
+                                  <img src="/assets/images/icons/dashboard-icon.png" alt="Icon" />
+                              </span>
+                              <span className="">Admin</span>
+                          </a>
+                          <a href="javascript:void(0)"
+                              className="d-flex align-items-center gap-8 fw-semibold text-sm radius-6 justify-content-center flex-grow-1 bg-warning-600 text-white py-10 px-8">
+                              <span className="d-flex">
+                                  <img src="/assets/images/icons/student-icon.png" alt="Icon" />
+                              </span>
+                              <span className="">Student</span>
+                          </a>
+                          <a href="javascript:void(0)"
+                              className="d-flex align-items-center gap-8 fw-semibold text-sm radius-6 justify-content-center flex-grow-1 bg-purple-600 text-white py-10 px-8">
+                              <span className="d-flex">
+                                  <img src="/assets/images/icons/teacher-icon.png" alt="Icon" />
+                              </span>
+                              <span className="">Teacher</span>
+                          </a>
+                          <a href="javascript:void(0)"
+                              className="d-flex align-items-center gap-8 fw-semibold text-sm radius-6 justify-content-center flex-grow-1 bg-primary-600 text-white py-10 px-8">
+                              <span className="d-flex">
+                                  <img src="/assets/images/icons/guardian-icon.png" alt="Icon" />
+                              </span>
+                              <span className="">Guardians </span>
+                          </a>
+                          <a href="javascript:void(0)"
+                              className="d-flex align-items-center gap-8 fw-semibold text-sm radius-6 justify-content-center flex-grow-1 bg-pink text-white py-10 px-8">
+                              <span className="d-flex">
+                                  <img src="/assets/images/icons/library-icon.png" alt="Icon" />
+                              </span>
+                              <span className="">Librarian</span>
+                          </a>
+                      </div>
+                  </form>
+                  <div className="mt-32 text-center text-sm">
+                      Don't have an account?
+                      <a href="/register" className="text-primary-600 fw-semibold text-decoration-underline">
+                          Create an account
+                      </a>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+    </>
+  );
+}
