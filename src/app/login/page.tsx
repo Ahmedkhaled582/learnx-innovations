@@ -9,14 +9,9 @@ import { useRouter } from "next/navigation";
 import ThemeCustomization from "@/components/ThemeCustomization";
 import MobileOverlay from "@/components/MobileOverlay";
 import { loginAction } from "@/features/auth/api/auth";
+import { LoginFormValues, loginSchema } from "@/features/auth/schema/authSchema";
 
-const loginSchema = z.object({
-  userName: z.string().min(1, "Username is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  schoolId: z.string().min(1, "School ID is required"),
-});
 
-type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
