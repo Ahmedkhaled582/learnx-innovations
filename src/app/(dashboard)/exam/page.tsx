@@ -18,7 +18,7 @@ export default function ExamPage() {
                       <span className="d-flex text-md">
                           <i className="ri-add-large-line"></i>
                       </span>
-                      Add Exam
+                      Add Exammmmmmmmm
                   </button>
               </div>
       

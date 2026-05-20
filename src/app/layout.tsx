@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Script from "next/script";
 import "@/types/iconify";
+import { getProfile } from "@/features/auth/api/auth";
+import Providers from "./provider";
+import AuthInitializer from "@/components/AuthInitializer";
 
 export const metadata: Metadata = {
   title: "Edudash - School, College & LMS Admin Dashboard",
@@ -9,7 +12,9 @@ export const metadata: Metadata = {
     "Modern Education Admin Dashboard for schools, colleges, universities, and eLearning platforms.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+    const { user, token } = await getProfile();
+
   return (
     <html lang="en" data-theme="light" suppressHydrationWarning>
       <head>
@@ -22,8 +27,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <link rel="stylesheet" href="/assets/css/lib/full-calendar.css" />
         <link rel="stylesheet" href="/assets/css/lib/calendar.css" />
         <link rel="stylesheet" href="/assets/css/style.css" />
-        
-        {/* Core third-party scripts loaded before Next.js hydration */}
         <Script src="/assets/js/lib/jquery-3.7.1.min.js" strategy="beforeInteractive" />
         <Script src="/assets/js/lib/bootstrap.bundle.min.js" strategy="beforeInteractive" />
         <Script src="/assets/js/lib/apexcharts.min.js" strategy="beforeInteractive" />
@@ -34,8 +37,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <Script src="/assets/js/full-calendar.js" strategy="beforeInteractive" />
       </head>
       <body suppressHydrationWarning>
+        <Providers>
+          <AuthInitializer user={user} token={token} />
+
         {children}
-        {/* Main app.js loaded after the DOM is ready */}
+        </Providers>
         <Script src="/assets/js/app.js" strategy="afterInteractive" />
       </body>
     </html>

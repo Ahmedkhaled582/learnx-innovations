@@ -1,8 +1,57 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useRouter } from "next/navigation";
 import ThemeCustomization from "@/components/ThemeCustomization";
 import MobileOverlay from "@/components/MobileOverlay";
+import { loginAction } from "@/features/auth/api/auth";
+
+const loginSchema = z.object({
+  userName: z.string().min(1, "Username is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  schoolId: z.string().min(1, "School ID is required"),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      userName: "",
+      password: "",
+      schoolId: "DEFAULT",
+    },
+  });
+
+  const onSubmit = async (data: LoginFormValues) => {
+    setError(null);
+    try {
+      const res = await loginAction(data);
+      if (res.success) {
+        // Redirect to dashboard or home page
+        router.push("/");
+        router.refresh();
+      } else {
+        setError(res.error || "Login failed");
+      }
+    } catch (err: any) {
+      setError(err?.message || "An unexpected error occurred");
+    }
+  };
+
   return (
     <>
       <ThemeCustomization />
@@ -24,14 +73,31 @@ export default function LoginPage() {
                           Log in to your account to continue
                       </p>
                   </div>
-                  <form action="#" className="d-flex flex-column gap-32 submit-form">
+                  <form onSubmit={handleSubmit(onSubmit)} className="d-flex flex-column gap-32 submit-form">
+                      {error && (
+                          <div className="alert alert-danger py-12 px-16 text-sm radius-8" role="alert">
+                              {error}
+                          </div>
+                      )}
+                      
                       <div className="d-flex flex-column gap-16">
                           <div>
-                              <label htmlFor="email" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
-                                  Email Address
+                              <label htmlFor="userName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                                  Username
                                   <span className="text-danger-600">*</span>
                               </label>
-                              <input type="email" id="email" className="email-field form-control" placeholder="Enter your email"  />
+                              <input 
+                                  type="text" 
+                                  id="userName" 
+                                  className="userName-field form-control" 
+                                  placeholder="Enter your username" 
+                                  {...register("userName")}
+                              />
+                              {errors.userName && (
+                                  <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                                      {errors.userName.message}
+                                  </span>
+                              )}
                           </div>
       
                           <div>
@@ -40,13 +106,46 @@ export default function LoginPage() {
                                   <span className="text-danger-600">*</span>
                               </label>
                               <div className="position-relative">
-                                  <input type="password" id="password" className="password-field form-control" placeholder="Enter your password"
-                                       />
-                                  <button type="button"
-                                      className="toggle-password btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light cursor-pointer ri-eye-line"
-                                      data-toggle="#password" aria-label="Toggle password visibility">
+                                  <input 
+                                      type={showPassword ? "text" : "password"} 
+                                      id="password" 
+                                      className="password-field form-control" 
+                                      placeholder="Enter your password"
+                                      {...register("password")}
+                                  />
+                                  <button 
+                                      type="button"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                      className={`toggle-password btn p-0 border-0 bg-transparent position-absolute end-0 top-50 translate-middle-y me-16 text-secondary-light cursor-pointer ${
+                                          showPassword ? "ri-eye-off-line" : "ri-eye-line"
+                                      }`}
+                                      aria-label="Toggle password visibility">
                                   </button>
                               </div>
+                              {errors.password && (
+                                  <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                                      {errors.password.message}
+                                  </span>
+                              )}
+                          </div>
+
+                          <div>
+                              <label htmlFor="schoolId" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                                  School ID
+                                  <span className="text-danger-600">*</span>
+                              </label>
+                              <input 
+                                  type="text" 
+                                  id="schoolId" 
+                                  className="schoolId-field form-control" 
+                                  placeholder="Enter school ID" 
+                                  {...register("schoolId")}
+                              />
+                              {errors.schoolId && (
+                                  <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                                      {errors.schoolId.message}
+                                  </span>
+                              )}
                           </div>
                       </div>
                       <div className="d-flex justify-content-between gap-2">
@@ -54,11 +153,15 @@ export default function LoginPage() {
                               <input className="form-check-input border border-neutral-400" type="checkbox" value="" id="remeber" />
                               <label className="form-check-label" htmlFor="remeber">Remember me </label>
                           </div>
-                          <Link href="#" className="text-primary-600 fw-medium text-decoration-underline">Forgot
-                              Password?</Link>
+                          <Link href="#" className="text-primary-600 fw-medium text-decoration-underline">Forgot Password?</Link>
                       </div>
                       <div className="">
-                          <button type="submit" className="loginBtn btn btn-primary-600 text-sm btn-sm px-12 py-16 w-100 radius-8"> Log In
+                          <button 
+                              type="submit" 
+                              disabled={isSubmitting}
+                              className="loginBtn btn btn-primary-600 text-sm btn-sm px-12 py-16 w-100 radius-8"
+                          > 
+                              {isSubmitting ? "Logging In..." : "Log In"}
                           </button>
                       </div>
                       <div className="text-center text-sm text-secondary-light">
@@ -109,12 +212,6 @@ export default function LoginPage() {
                           </Link>
                       </div>
                   </form>
-                  <div className="mt-32 text-center text-sm">
-                      Don't have an account?
-                      <Link href="/register" className="text-primary-600 fw-semibold text-decoration-underline">
-                          Create an account
-                      </Link>
-                  </div>
               </div>
           </div>
       </div>
