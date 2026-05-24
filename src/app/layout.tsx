@@ -7,7 +7,7 @@ import Providers from "./provider";
 import AuthInitializer from "@/components/AuthInitializer";
 
 export const metadata: Metadata = {
-  title: "Edudash - School, College & LMS Admin Dashboard",
+  title: "learnx-innovations - School, College & LMS Admin Dashboard",
   description:
     "Modern Education Admin Dashboard for schools, colleges, universities, and eLearning platforms.",
 };
