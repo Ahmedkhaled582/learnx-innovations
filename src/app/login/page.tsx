@@ -67,7 +67,7 @@ export default function LoginPage() {
                   <Link href="/" className="">
                       <img className="w-30" src="/assets/images/INNOVATION LOGO.png" alt="Logo" />
                   </Link>
-                  <div className="mt-32 mb-32">
+                  <div className="mb-32">
                       <h1 className="h6 fw-bold text-primary-light mb-8">
                           Welcome Back 👋
                       </h1>

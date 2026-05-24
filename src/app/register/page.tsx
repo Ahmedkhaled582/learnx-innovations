@@ -163,7 +163,7 @@ export default function RegisterPage() {
                       <img className="w-30" src="/assets/images/INNOVATION LOGO.png" alt="Logo" />
                   </Link>
       
-                  <div className="mt-48 mb-32">
+                  <div className="mb-32">
                       <h1 className="h6 fw-bold text-primary-light">Create Your Account 🚀</h1>
                       <p className="text-sm text-secondary-light">
                           Fill in the details to get started
