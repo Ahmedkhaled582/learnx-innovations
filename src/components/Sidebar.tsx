@@ -15,9 +15,9 @@ export default function Sidebar() {
         <div className="">
           <div className="sidebar-logo d-flex align-items-center justify-content-between">
             <Link href="/" className="">
-              <img src="/assets/images/logo.png" alt="site logo" className="light-logo" />
-              <img src="/assets/images/logo-light.png" alt="site logo" className="dark-logo" />
-              <img src="/assets/images/logo-icon.png" alt="site logo" className="logo-icon" />
+              <img src="/assets/images/INNOVATION LOGO.png" alt="site logo" className="light-logo" />
+              <img src="/assets/images/INNOVATION LOGO.png" alt="site logo" className="dark-logo" />
+              <img src="/assets/images/INNOVATION LOGO.png" alt="site logo" className="logo-icon" />
             </Link>
             <button type="button" className="text-xxl d-xl-flex d-none line-height-1 sidebar-toggle text-neutral-500"
               aria-label="Collapse Sidebar">
