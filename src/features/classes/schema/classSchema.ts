@@ -13,9 +13,7 @@ export const classSchema = z.object({
       }
       return Boolean(val);
     },
-    z.boolean({
-      required_error: "Status is required",
-    })
+    z.boolean()
   ),
 });
 
