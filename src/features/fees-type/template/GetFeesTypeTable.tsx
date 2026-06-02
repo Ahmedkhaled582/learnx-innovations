@@ -1,60 +1,58 @@
 import * as React from "react";
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Class } from "../api/classesApi";
+import { FeeType } from "../api/feesTypeApi";
 import { UniTable } from "@/components/shared/UniTable";
 
-interface GetClassTableProps {
-  data?: Class[];
+interface GetFeesTypeTableProps {
+  data?: FeeType[];
   isLoading: boolean;
   error: any;
-  sections?: { id: number; name: string }[];
-  onEdit: (classItem: Class) => void;
+  onEdit: (feeType: FeeType) => void;
   onDelete: (id: number) => void;
 }
 
-export function GetClassTable({
+export function GetFeesTypeTable({
   data,
   isLoading,
   error,
-  sections,
   onEdit,
   onDelete,
-}: GetClassTableProps) {
+}: GetFeesTypeTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(10);
 
-  // Helper to fetch section name by ID
-  const getSectionName = React.useCallback((secId: number) => {
-    const sec = sections?.find((s) => s.id === secId);
-    return sec ? sec.name : `Section ${secId}`;
-  }, [sections]);
-
   // Define Columns
-  const columns = React.useMemo<ColumnDef<Class, any>[]>(() => [
+  const columns = React.useMemo<ColumnDef<FeeType, any>[]>(() => [
     {
       id: "index",
       header: "S.L",
-      cell: ({ row }) => (row.index + 1).toString().padStart(2, "0"),
+      cell: ({ row }) => (
+        <div className="form-check style-check d-flex align-items-center">
+          <input className="form-check-input" type="checkbox" />
+          <label className="form-check-label">
+            {(row.index + 1).toString().padStart(2, "0")}
+          </label>
+        </div>
+      ),
       size: 60,
     },
     {
       accessorKey: "name",
-      header: "Name",
+      header: "Fees Name",
     },
     {
-      id: "section",
-      header: "Section",
-      cell: ({ row }) => row.original.sections,
-    },
-    {
-      accessorKey: "status",
+      accessorKey: "isActive",
       header: "Status",
       cell: ({ row }) => (
-        row.original.status ? (
-          <span className="bg-success-100 text-success-600 px-24 py-4 radius-4 fw-medium text-sm">Active</span>
+        row.original.isActive ? (
+          <span className="bg-success-100 text-success-600 px-24 py-4 radius-4 fw-medium text-sm">
+            Active
+          </span>
         ) : (
-          <span className="bg-danger-100 text-danger-600 px-24 py-4 radius-4 fw-medium text-sm">Inactive</span>
+          <span className="bg-danger-100 text-danger-600 px-24 py-4 radius-4 fw-medium text-sm">
+            Inactive
+          </span>
         )
       ),
     },
@@ -63,8 +61,12 @@ export function GetClassTable({
       header: "Action",
       cell: ({ row }) => (
         <div className="btn-group">
-          <button type="button" className="text-primary-light text-xl border-0 bg-transparent"
-            data-bs-toggle="dropdown" aria-expanded="false">
+          <button
+            type="button"
+            className="text-primary-light text-xl border-0 bg-transparent"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
             <iconify-icon icon="tabler:dots-vertical"></iconify-icon>
           </button>
           <ul className="dropdown-menu dropdown-menu-lg-end border p-12">
@@ -72,9 +74,10 @@ export function GetClassTable({
               <button
                 type="button"
                 onClick={() => onEdit(row.original)}
-                className="dropdown-item rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900 d-flex align-items-center gap-2 py-6 border-0 bg-transparent w-100 text-start"
+                className="dropdown-item rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900 d-flex align-items-center gap-2 py-6 w-100 text-start border-0 bg-transparent"
               >
-                <i className="ri-edit-2-line"></i>Edit
+                <i className="ri-edit-2-line"></i>
+                Edit
               </button>
             </li>
             <li>
@@ -82,26 +85,28 @@ export function GetClassTable({
                 type="button"
                 onClick={() => onDelete(row.original.id)}
                 className="dropdown-item rounded text-secondary-light bg-hover-neutral-200 text-hover-neutral-900 d-flex align-items-center gap-2 py-6 w-100 text-start border-0 bg-transparent"
-                data-bs-toggle="modal" data-bs-target="#exampleModalDelete">
-                <i className="ri-delete-bin-6-line"></i>Delete
+                data-bs-toggle="modal"
+                data-bs-target="#exampleModalDelete"
+              >
+                <i className="ri-delete-bin-6-line"></i>
+                Delete
               </button>
             </li>
           </ul>
         </div>
       ),
     },
-  ], [getSectionName, onEdit, onDelete]);
+  ], [onEdit, onDelete]);
 
   // Filter Data
-  const filteredClasses = React.useMemo(() => {
+  const filteredFeeTypes = React.useMemo(() => {
     if (!data) return [];
     if (!searchTerm) return data;
     const term = searchTerm.toLowerCase();
-    return data.filter((c) =>
-      (c.name && c.name.toLowerCase().includes(term)) ||
-      (getSectionName(c.sectionId) && getSectionName(c.sectionId).toLowerCase().includes(term))
+    return data.filter((fee) =>
+      (fee.name && fee.name.toLowerCase().includes(term))
     );
-  }, [data, searchTerm, getSectionName]);
+  }, [data, searchTerm]);
 
   return (
     <div className="card h-100">
@@ -111,7 +116,7 @@ export function GetClassTable({
             <div className="dropdown">
               <button
                 type="button"
-                className="px-12 py-5-px border border-neutral-300 radius-8 d-flex align-items-center gap-20"
+                className="px-12 py-5-px border border-neutral-300 radius-8 d-flex align-items-center gap-20 "
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
@@ -184,15 +189,15 @@ export function GetClassTable({
             </div>
           ) : error ? (
             <div className="text-center py-20 text-danger">
-              Error loading classes.
+              Error loading fees types.
             </div>
           ) : (
             <UniTable
-              data={filteredClasses}
+              data={filteredFeeTypes}
               columns={columns}
               pageSize={pageSize}
               enablePagination={true}
-              itemLabel="classes"
+              itemLabel="fees types"
             />
           )}
         </div>

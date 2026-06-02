@@ -5,6 +5,7 @@ export interface Class {
   name: string;
   sectionId: number;
   sectionName?: string;
+  sections?: string;
   status: boolean;
 }
 
