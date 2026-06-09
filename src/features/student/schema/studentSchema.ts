@@ -53,3 +53,24 @@ export const studentSchema = z.object({
 });
 
 export type StudentFormValues = z.infer<typeof studentSchema>;
+
+export const addStudentSchema = studentSchema.extend({
+  password: z.string().min(1, "Password is required"),
+  classId: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
+    z.number().int().gt(0, "Please select a Class")
+  ),
+  sectionId: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
+    z.number().int().gt(0, "Please select a Section")
+  ),
+  categoryId: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
+    z.number().int().gt(0, "Please select a Category")
+  ),
+  dateOfBirth: z.string().min(1, "Date of Birth is required"),
+  admissionNumber: z.string().min(1, "Admission Number is required"),
+});
+
+export type AddStudentFormValues = z.infer<typeof addStudentSchema>;
+

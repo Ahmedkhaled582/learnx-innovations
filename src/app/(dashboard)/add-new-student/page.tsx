@@ -6,33 +6,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { studentSchema } from "@/features/student/schema/studentSchema";
+import { addStudentSchema, AddStudentFormValues } from "@/features/student/schema/studentSchema";
 import { useClasses } from "@/features/classes/hooks/useClass";
 import { useSections } from "@/features/sections/hooks/useSection";
 import { useCategories } from "@/features/category/hooks/useCategory";
 import { useAddStudent } from "@/features/student/hooks/useStudent";
 import { useToast } from "@/components/Toast";
-
-const addStudentSchema = studentSchema.extend({
-  password: z.string().min(1, "Password is required"),
-  classId: z.preprocess(
-    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
-    z.number().int().gt(0, "Please select a Class")
-  ),
-  sectionId: z.preprocess(
-    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
-    z.number().int().gt(0, "Please select a Section")
-  ),
-  categoryId: z.preprocess(
-    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
-    z.number().int().gt(0, "Please select a Category")
-  ),
-  dateOfBirth: z.string().min(1, "Date of Birth is required"),
-  admissionNumber: z.string().min(1, "Admission Number is required"),
-});
-
-type AddStudentFormValues = z.infer<typeof addStudentSchema>;
 
 interface DropZoneFieldProps {
   label: string;
