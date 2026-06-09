@@ -4,11 +4,35 @@ import Link from "next/link";
 import * as React from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { studentSchema } from "@/features/student/schema/studentSchema";
 import { useClasses } from "@/features/classes/hooks/useClass";
 import { useSections } from "@/features/sections/hooks/useSection";
 import { useCategories } from "@/features/category/hooks/useCategory";
 import { useAddStudent } from "@/features/student/hooks/useStudent";
 import { useToast } from "@/components/Toast";
+
+const addStudentSchema = studentSchema.extend({
+  password: z.string().min(1, "Password is required"),
+  classId: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
+    z.number().int().gt(0, "Please select a Class")
+  ),
+  sectionId: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
+    z.number().int().gt(0, "Please select a Section")
+  ),
+  categoryId: z.preprocess(
+    (val) => (val === "" || val === undefined || val === null ? 0 : Number(val)),
+    z.number().int().gt(0, "Please select a Category")
+  ),
+  dateOfBirth: z.string().min(1, "Date of Birth is required"),
+  admissionNumber: z.string().min(1, "Admission Number is required"),
+});
+
+type AddStudentFormValues = z.infer<typeof addStudentSchema>;
 
 interface DropZoneFieldProps {
   label: string;
@@ -62,9 +86,9 @@ export default function AddNewStudentPage() {
   const { showToast } = useToast();
 
   // Fetch dropdown data
-  const { data: classes, isLoading: isClassesLoading } = useClasses();
-  const { data: sections, isLoading: isSectionsLoading } = useSections();
-  const { data: categories, isLoading: isCategoriesLoading } = useCategories();
+  const { data: classes } = useClasses();
+  const { data: sections } = useSections();
+  const { data: categories } = useCategories();
 
   // Add Mutation
   const addStudentMutation = useAddStudent();
@@ -76,135 +100,168 @@ export default function AddNewStudentPage() {
   const [guardianPhoto, setGuardianPhoto] = useState<File | null>(null);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
 
-  // Form fields state using PascalCase keys to match backend schema
-  const [formData, setFormData] = useState({
-    AdmissionNumber: "",
-    RollNumber: "",
-    AcademicYear: "Jun 2025/2026",
-    Status: true,
-    FirstName: "",
-    LastName: "",
-    Gender: "",
-    DateOfBirth: "",
-    BloodGroup: "",
-    EmailAddress: "",
-    CategoryId: 0,
-    ClassId: 0,
-    SectionId: 0,
-    Height: "",
-    Weight: "",
-    BankAccountNumber: "",
-    BankName: "",
-    IFSCCode: "",
-    NationalIdentificationNumber: "",
-    PreviousSchoolName: "",
-    PreviousSchoolAddress: "",
-    CurrentAddress: "",
-    PermanentAddress: "",
-    RoomNo: "",
-    FatherName: "",
-    FatherPhone: "",
-    FatherOccupation: "",
-    MotherName: "",
-    MotherPhone: "",
-    MotherOccupation: "",
-    GuardianName: "",
-    GuardianEmail: "",
-    GuardianPhone: "",
-    GuardianOccupation: "",
-    GuardianAddress: "",
-    GuardianRelation: "",
-    DocumentName: "",
-    PhoneNumber: "",
-    Details: "",
-    Password: "",
+  const [guardianType, setGuardianType] = useState<"father" | "mother" | "others">("others");
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+    reset,
+  } = useForm<AddStudentFormValues>({
+    resolver: zodResolver(addStudentSchema) as any,
+    defaultValues: {
+      admissionNumber: "",
+      rollNumber: "",
+      academicYear: "Jun 2025/2026",
+      status: true,
+      firstName: "",
+      lastName: "",
+      gender: "",
+      dateOfBirth: "",
+      bloodGroup: "",
+      emailAddress: "",
+      categoryId: 0,
+      classId: 0,
+      sectionId: 0,
+      height: "",
+      weight: "",
+      bankAccountNumber: "",
+      bankName: "",
+      ifscCode: "",
+      nationalIdentificationNumber: "",
+      previousSchoolName: "",
+      previousSchoolAddress: "",
+      currentAddress: "",
+      permanentAddress: "",
+      roomNo: "",
+      fatherName: "",
+      fatherPhone: "",
+      fatherOccupation: "",
+      motherName: "",
+      motherPhone: "",
+      motherOccupation: "",
+      guardianName: "",
+      guardianEmail: "",
+      guardianPhone: "",
+      guardianOccupation: "",
+      guardianAddress: "",
+      guardianRelation: "Other",
+      documentName: "",
+      phoneNumber: "",
+      details: "",
+      password: "",
+    },
   });
 
-  const [guardianType, setGuardianType] = useState<"father" | "mother" | "others">("others");
+  const fatherName = watch("fatherName");
+  const fatherPhone = watch("fatherPhone");
+  const fatherOccupation = watch("fatherOccupation");
+  const motherName = watch("motherName");
+  const motherPhone = watch("motherPhone");
+  const motherOccupation = watch("motherOccupation");
+  const emailAddress = watch("emailAddress");
 
   // Sync guardian fields if father or mother is selected
   React.useEffect(() => {
     if (guardianType === "father") {
-      setFormData((prev) => ({
-        ...prev,
-        GuardianName: prev.FatherName,
-        GuardianPhone: prev.FatherPhone,
-        GuardianOccupation: prev.FatherOccupation,
-        GuardianRelation: "Father",
-        GuardianEmail: prev.EmailAddress, // Default or leave empty
-      }));
+      setValue("guardianName", fatherName || "");
+      setValue("guardianPhone", fatherPhone || "");
+      setValue("guardianOccupation", fatherOccupation || "");
+      setValue("guardianRelation", "Father");
+      setValue("guardianEmail", emailAddress || "");
       setGuardianPhoto(fatherPhoto);
     } else if (guardianType === "mother") {
-      setFormData((prev) => ({
-        ...prev,
-        GuardianName: prev.MotherName,
-        GuardianPhone: prev.MotherPhone,
-        GuardianOccupation: prev.MotherOccupation,
-        GuardianRelation: "Mother",
-        GuardianEmail: prev.EmailAddress,
-      }));
+      setValue("guardianName", motherName || "");
+      setValue("guardianPhone", motherPhone || "");
+      setValue("guardianOccupation", motherOccupation || "");
+      setValue("guardianRelation", "Mother");
+      setValue("guardianEmail", emailAddress || "");
       setGuardianPhoto(motherPhoto);
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        GuardianRelation: "Other",
-      }));
+      setValue("guardianRelation", "Other");
     }
-  }, [guardianType, formData.FatherName, formData.FatherPhone, formData.FatherOccupation, formData.MotherName, formData.MotherPhone, formData.MotherOccupation, fatherPhoto, motherPhoto]);
-
-  // Handle text input change
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
-
+  }, [
+    guardianType,
+    fatherName,
+    fatherPhone,
+    fatherOccupation,
+    motherName,
+    motherPhone,
+    motherOccupation,
+    emailAddress,
+    fatherPhoto,
+    motherPhoto,
+    setValue,
+  ]);
 
   // Handle Form Submission
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Validations
-    if (!formData.FirstName) {
-      showToast("error", "Validation Error", "First Name is required");
-      return;
-    }
-    if (!formData.LastName) {
-      showToast("error", "Validation Error", "Last Name is required");
-      return;
-    }
-    if (!formData.EmailAddress) {
-      showToast("error", "Validation Error", "Email Address is required");
-      return;
-    }
-    if (!formData.Password) {
-      showToast("error", "Validation Error", "Password is required");
-      return;
-    }
-    if (!formData.ClassId) {
-      showToast("error", "Validation Error", "Please select a Class");
-      return;
-    }
-    if (!formData.SectionId) {
-      showToast("error", "Validation Error", "Please select a Section");
-      return;
+  const onSubmit = (data: AddStudentFormValues) => {
+    const finalData = { ...data };
+    if (guardianType === "father") {
+      finalData.guardianName = fatherName;
+      finalData.guardianPhone = fatherPhone;
+      finalData.guardianOccupation = fatherOccupation;
+      finalData.guardianRelation = "Father";
+      finalData.guardianEmail = emailAddress;
+    } else if (guardianType === "mother") {
+      finalData.guardianName = motherName;
+      finalData.guardianPhone = motherPhone;
+      finalData.guardianOccupation = motherOccupation;
+      finalData.guardianRelation = "Mother";
+      finalData.guardianEmail = emailAddress;
     }
 
     const payload = new FormData();
 
-    // Append standard fields
-    Object.entries(formData).forEach(([key, value]) => {
-      payload.append(key, String(value));
-    });
+    // Map camelCase form values to PascalCase backend keys
+    payload.append("AdmissionNumber", finalData.admissionNumber || "");
+    payload.append("RollNumber", finalData.rollNumber || "");
+    payload.append("AcademicYear", finalData.academicYear || "Jun 2025/2026");
+    payload.append("Status", String(finalData.status !== false));
+    payload.append("FirstName", finalData.firstName);
+    payload.append("LastName", finalData.lastName);
+    payload.append("Gender", finalData.gender || "");
+    payload.append("DateOfBirth", finalData.dateOfBirth || "");
+    payload.append("BloodGroup", finalData.bloodGroup || "");
+    payload.append("EmailAddress", finalData.emailAddress);
+    payload.append("CategoryId", String(finalData.categoryId));
+    payload.append("ClassId", String(finalData.classId));
+    payload.append("SectionId", String(finalData.sectionId));
+    payload.append("Height", finalData.height || "");
+    payload.append("Weight", finalData.weight || "");
+    payload.append("BankAccountNumber", finalData.bankAccountNumber || "");
+    payload.append("BankName", finalData.bankName || "");
+    payload.append("IFSCCode", finalData.ifscCode || "");
+    payload.append("NationalIdentificationNumber", finalData.nationalIdentificationNumber || "");
+    payload.append("PreviousSchoolName", finalData.previousSchoolName || "");
+    payload.append("PreviousSchoolAddress", finalData.previousSchoolAddress || "");
+    payload.append("CurrentAddress", finalData.currentAddress || "");
+    payload.append("PermanentAddress", finalData.permanentAddress || "");
+    payload.append("RoomNo", finalData.roomNo || "");
+    payload.append("FatherName", finalData.fatherName || "");
+    payload.append("FatherPhone", finalData.fatherPhone || "");
+    payload.append("FatherOccupation", finalData.fatherOccupation || "");
+    payload.append("MotherName", finalData.motherName || "");
+    payload.append("MotherPhone", finalData.motherPhone || "");
+    payload.append("MotherOccupation", finalData.motherOccupation || "");
+    payload.append("GuardianName", finalData.guardianName || "");
+    payload.append("GuardianEmail", finalData.guardianEmail || "");
+    payload.append("GuardianPhone", finalData.guardianPhone || "");
+    payload.append("GuardianOccupation", finalData.guardianOccupation || "");
+    payload.append("GuardianAddress", finalData.guardianAddress || "");
+    payload.append("GuardianRelation", finalData.guardianRelation || "Other");
+    payload.append("DocumentName", finalData.documentName || "");
+    payload.append("PhoneNumber", finalData.phoneNumber || "");
+    payload.append("Details", finalData.details || "");
+    payload.append("Password", finalData.password || "");
 
-    // Default fields not entered by user (omitted per user instructions)
+    // Default fields
     payload.append("StudentImage", "");
     payload.append("ParentId", "0");
     payload.append("UserId", "");
-    payload.append("HostelId", "0");
+    payload.append("HostelId", "");
     payload.append("FatherImage", "");
     payload.append("MotherImage", "");
     payload.append("GuardianImage", "");
@@ -219,7 +276,7 @@ export default function AddNewStudentPage() {
 
     addStudentMutation.mutate(payload, {
       onSuccess: () => {
-        showToast("success", "Student Added", `Successfully registered student ${formData.FirstName}`);
+        showToast("success", "Student Added", `Successfully registered student ${finalData.firstName}`);
         router.push("/student-list");
       },
       onError: (err: any) => {
@@ -242,7 +299,7 @@ export default function AddNewStudentPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-24">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-24">
         <div className="row gy-3">
           {/* Section: Personal Info */}
           <div className="col-lg-12">
@@ -254,24 +311,29 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="AcademicYear" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="academicYear" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Academic Year <span className="text-danger-600">*</span>
                       </label>
-                      <select id="AcademicYear" className="form-control form-select" value={formData.AcademicYear} onChange={handleChange}>
+                      <select id="academicYear" className="form-control form-select" {...register("academicYear")}>
                         <option value="Jun 2025/2026">Jun 2025/2026</option>
                         <option value="Jun 2026/2027">Jun 2026/2027</option>
                         <option value="Jun 2027/2028">Jun 2027/2028</option>
                         <option value="Jun 2028/2029">Jun 2028/2029</option>
                       </select>
+                      {errors.academicYear && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.academicYear.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="ClassId" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="classId" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Class <span className="text-danger-600">*</span>
                       </label>
-                      <select id="ClassId" className="form-control form-select" value={formData.ClassId} onChange={handleChange}>
+                      <select id="classId" className="form-control form-select" {...register("classId")}>
                         <option value="0">Select Class</option>
                         {classes?.map((c) => (
                           <option key={c.id} value={c.id}>
@@ -279,15 +341,20 @@ export default function AddNewStudentPage() {
                           </option>
                         ))}
                       </select>
+                      {errors.classId && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.classId.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="SectionId" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="sectionId" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Section <span className="text-danger-600">*</span>
                       </label>
-                      <select id="SectionId" className="form-control form-select" value={formData.SectionId} onChange={handleChange}>
+                      <select id="sectionId" className="form-control form-select" {...register("sectionId")}>
                         <option value="0">Select Section</option>
                         {sections?.map((s) => (
                           <option key={s.id} value={s.id}>
@@ -295,82 +362,100 @@ export default function AddNewStudentPage() {
                           </option>
                         ))}
                       </select>
+                      {errors.sectionId && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.sectionId.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="RollNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="rollNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Roll Number
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="RollNumber"
+                        id="rollNumber"
                         placeholder="Enter roll number"
-                        value={formData.RollNumber}
-                        onChange={handleChange}
+                        {...register("rollNumber")}
                       />
+                      {errors.rollNumber && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.rollNumber.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="AdmissionNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="admissionNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Admission No <span className="text-danger-600">*</span>
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="AdmissionNumber"
+                        id="admissionNumber"
                         placeholder="Enter admission number"
-                        value={formData.AdmissionNumber}
-                        onChange={handleChange}
-                        required
+                        {...register("admissionNumber")}
                       />
+                      {errors.admissionNumber && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.admissionNumber.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="FirstName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="firstName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         First Name <span className="text-danger-600">*</span>
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="FirstName"
+                        id="firstName"
                         placeholder="Enter First Name"
-                        value={formData.FirstName}
-                        onChange={handleChange}
-                        required
+                        {...register("firstName")}
                       />
+                      {errors.firstName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.firstName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="LastName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="lastName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Last Name <span className="text-danger-600">*</span>
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="LastName"
+                        id="lastName"
                         placeholder="Enter Last Name"
-                        value={formData.LastName}
-                        onChange={handleChange}
-                        required
+                        {...register("lastName")}
                       />
+                      {errors.lastName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.lastName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="CategoryId" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="categoryId" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Category <span className="text-danger-600">*</span>
                       </label>
-                      <select id="CategoryId" className="form-control form-select" value={formData.CategoryId} onChange={handleChange}>
+                      <select id="categoryId" className="form-control form-select" {...register("categoryId")}>
                         <option value="0">Select Category</option>
                         {categories?.map((cat) => (
                           <option key={cat.id} value={cat.id}>
@@ -378,68 +463,88 @@ export default function AddNewStudentPage() {
                           </option>
                         ))}
                       </select>
+                      {errors.categoryId && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.categoryId.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="Gender" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="gender" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Gender
                       </label>
-                      <select id="Gender" className="form-control form-select" value={formData.Gender} onChange={handleChange}>
+                      <select id="gender" className="form-control form-select" {...register("gender")}>
                         <option value="">Select Gender</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                       </select>
+                      {errors.gender && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.gender.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="DateOfBirth" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="dateOfBirth" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Date Of Birth <span className="text-danger-600">*</span>
                       </label>
                       <input
                         type="date"
                         className="form-control"
-                        id="DateOfBirth"
-                        value={formData.DateOfBirth}
-                        onChange={handleChange}
-                        required
+                        id="dateOfBirth"
+                        {...register("dateOfBirth")}
                       />
+                      {errors.dateOfBirth && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.dateOfBirth.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="PhoneNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="phoneNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Phone Number
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="PhoneNumber"
+                        id="phoneNumber"
                         placeholder="Enter Phone Number"
-                        value={formData.PhoneNumber}
-                        onChange={handleChange}
+                        {...register("phoneNumber")}
                       />
+                      {errors.phoneNumber && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.phoneNumber.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="EmailAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="emailAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Email Address <span className="text-danger-600">*</span>
                       </label>
                       <input
                         type="email"
                         className="form-control"
-                        id="EmailAddress"
+                        id="emailAddress"
                         placeholder="Enter Email"
-                        value={formData.EmailAddress}
-                        onChange={handleChange}
-                        required
+                        {...register("emailAddress")}
                       />
+                      {errors.emailAddress && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.emailAddress.message}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -459,94 +564,118 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="FatherName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="fatherName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Father's Name
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="FatherName"
+                        id="fatherName"
                         placeholder="Enter Father's Name"
-                        value={formData.FatherName}
-                        onChange={handleChange}
+                        {...register("fatherName")}
                       />
+                      {errors.fatherName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.fatherName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="FatherPhone" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="fatherPhone" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Father's Phone Number
                       </label>
                       <input
                         type="tel"
                         className="form-control"
-                        id="FatherPhone"
+                        id="fatherPhone"
                         placeholder="Enter Father's Number"
-                        value={formData.FatherPhone}
-                        onChange={handleChange}
+                        {...register("fatherPhone")}
                       />
+                      {errors.fatherPhone && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.fatherPhone.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="FatherOccupation" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="fatherOccupation" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Father's Occupation
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="FatherOccupation"
+                        id="fatherOccupation"
                         placeholder="Enter Father's Occupation"
-                        value={formData.FatherOccupation}
-                        onChange={handleChange}
+                        {...register("fatherOccupation")}
                       />
+                      {errors.fatherOccupation && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.fatherOccupation.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <DropZoneField label="Father's Photo" file={fatherPhoto} setFile={setFatherPhoto} />
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="MotherName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="motherName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Mother's Name
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="MotherName"
+                        id="motherName"
                         placeholder="Enter Mother's Name"
-                        value={formData.MotherName}
-                        onChange={handleChange}
+                        {...register("motherName")}
                       />
+                      {errors.motherName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.motherName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="MotherPhone" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="motherPhone" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Mother's Phone Number
                       </label>
                       <input
                         type="tel"
                         className="form-control"
-                        id="MotherPhone"
+                        id="motherPhone"
                         placeholder="Enter Mother's Number"
-                        value={formData.MotherPhone}
-                        onChange={handleChange}
+                        {...register("motherPhone")}
                       />
+                      {errors.motherPhone && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.motherPhone.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="MotherOccupation" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="motherOccupation" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Mother's Occupation
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="MotherOccupation"
+                        id="motherOccupation"
                         placeholder="Enter Mother's Occupation"
-                        value={formData.MotherOccupation}
-                        onChange={handleChange}
+                        {...register("motherOccupation")}
                       />
+                      {errors.motherOccupation && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.motherOccupation.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <DropZoneField label="Mother's Photo" file={motherPhoto} setFile={setMotherPhoto} />
@@ -600,82 +729,102 @@ export default function AddNewStudentPage() {
 
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="GuardianName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="guardianName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Guardian Name
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="GuardianName"
+                        id="guardianName"
                         placeholder="Enter Guardian Name"
-                        value={formData.GuardianName}
-                        onChange={handleChange}
                         disabled={guardianType !== "others"}
+                        {...register("guardianName")}
                       />
+                      {errors.guardianName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.guardianName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="GuardianEmail" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="guardianEmail" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Guardian Email
                       </label>
                       <input
                         type="email"
                         className="form-control"
-                        id="GuardianEmail"
+                        id="guardianEmail"
                         placeholder="Enter Guardian Email"
-                        value={formData.GuardianEmail}
-                        onChange={handleChange}
                         disabled={guardianType !== "others"}
+                        {...register("guardianEmail")}
                       />
+                      {errors.guardianEmail && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.guardianEmail.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="GuardianPhone" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="guardianPhone" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Guardian Phone Number
                       </label>
                       <input
                         type="tel"
                         className="form-control"
-                        id="GuardianPhone"
+                        id="guardianPhone"
                         placeholder="Enter Guardian Number"
-                        value={formData.GuardianPhone}
-                        onChange={handleChange}
                         disabled={guardianType !== "others"}
+                        {...register("guardianPhone")}
                       />
+                      {errors.guardianPhone && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.guardianPhone.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="GuardianOccupation" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="guardianOccupation" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Guardian Occupation
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="GuardianOccupation"
+                        id="guardianOccupation"
                         placeholder="Enter Occupation"
-                        value={formData.GuardianOccupation}
-                        onChange={handleChange}
                         disabled={guardianType !== "others"}
+                        {...register("guardianOccupation")}
                       />
+                      {errors.guardianOccupation && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.guardianOccupation.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xl-9 col-sm-6">
                     <div>
-                      <label htmlFor="GuardianAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="guardianAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Guardian Address
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="GuardianAddress"
+                        id="guardianAddress"
                         placeholder="Enter Guardian Address"
-                        value={formData.GuardianAddress}
-                        onChange={handleChange}
                         disabled={guardianType !== "others"}
+                        {...register("guardianAddress")}
                       />
+                      {errors.guardianAddress && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.guardianAddress.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <DropZoneField label="Guardian Photo" file={guardianPhoto} setFile={setGuardianPhoto} />
@@ -694,10 +843,10 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="BloodGroup" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="bloodGroup" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Blood Group
                       </label>
-                      <select id="BloodGroup" className="form-control form-select" value={formData.BloodGroup} onChange={handleChange}>
+                      <select id="bloodGroup" className="form-control form-select" {...register("bloodGroup")}>
                         <option value="">Select blood group</option>
                         <option value="A+">A+</option>
                         <option value="AB+">AB+</option>
@@ -708,36 +857,49 @@ export default function AddNewStudentPage() {
                         <option value="B-">B-</option>
                         <option value="O-">O-</option>
                       </select>
+                      {errors.bloodGroup && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.bloodGroup.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="Height" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="height" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Height
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="Height"
+                        id="height"
                         placeholder="Enter height"
-                        value={formData.Height}
-                        onChange={handleChange}
+                        {...register("height")}
                       />
+                      {errors.height && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.height.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="Weight" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="weight" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Weight
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="Weight"
+                        id="weight"
                         placeholder="Enter Weight"
-                        value={formData.Weight}
-                        onChange={handleChange}
+                        {...register("weight")}
                       />
+                      {errors.weight && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.weight.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -755,62 +917,78 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="BankAccountNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="bankAccountNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Bank Account Number
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="BankAccountNumber"
+                        id="bankAccountNumber"
                         placeholder="Enter bank account number"
-                        value={formData.BankAccountNumber}
-                        onChange={handleChange}
+                        {...register("bankAccountNumber")}
                       />
+                      {errors.bankAccountNumber && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.bankAccountNumber.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="BankName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="bankName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Bank Name
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="BankName"
+                        id="bankName"
                         placeholder="Enter bank name"
-                        value={formData.BankName}
-                        onChange={handleChange}
+                        {...register("bankName")}
                       />
+                      {errors.bankName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.bankName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="IFSCCode" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="ifscCode" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         IFSC Code
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="IFSCCode"
+                        id="ifscCode"
                         placeholder="Enter IFSC Code"
-                        value={formData.IFSCCode}
-                        onChange={handleChange}
+                        {...register("ifscCode")}
                       />
+                      {errors.ifscCode && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.ifscCode.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-4 col-sm-6">
                     <div>
-                      <label htmlFor="NationalIdentificationNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="nationalIdentificationNumber" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         National Identification Number
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="NationalIdentificationNumber"
+                        id="nationalIdentificationNumber"
                         placeholder="Enter national identification number"
-                        value={formData.NationalIdentificationNumber}
-                        onChange={handleChange}
+                        {...register("nationalIdentificationNumber")}
                       />
+                      {errors.nationalIdentificationNumber && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.nationalIdentificationNumber.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -828,32 +1006,40 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-sm-6">
                     <div>
-                      <label htmlFor="PreviousSchoolName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="previousSchoolName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         School Name
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="PreviousSchoolName"
+                        id="previousSchoolName"
                         placeholder="Enter School Name"
-                        value={formData.PreviousSchoolName}
-                        onChange={handleChange}
+                        {...register("previousSchoolName")}
                       />
+                      {errors.previousSchoolName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.previousSchoolName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-sm-6">
                     <div>
-                      <label htmlFor="PreviousSchoolAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="previousSchoolAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Address
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="PreviousSchoolAddress"
+                        id="previousSchoolAddress"
                         placeholder="Enter Address"
-                        value={formData.PreviousSchoolAddress}
-                        onChange={handleChange}
+                        {...register("previousSchoolAddress")}
                       />
+                      {errors.previousSchoolAddress && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.previousSchoolAddress.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -871,32 +1057,40 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-sm-6">
                     <div>
-                      <label htmlFor="CurrentAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="currentAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Current Address
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="CurrentAddress"
+                        id="currentAddress"
                         placeholder="Enter Current Address"
-                        value={formData.CurrentAddress}
-                        onChange={handleChange}
+                        {...register("currentAddress")}
                       />
+                      {errors.currentAddress && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.currentAddress.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-sm-6">
                     <div>
-                      <label htmlFor="PermanentAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="permanentAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Permanent Address
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="PermanentAddress"
+                        id="permanentAddress"
                         placeholder="Enter Permanent Address"
-                        value={formData.PermanentAddress}
-                        onChange={handleChange}
+                        {...register("permanentAddress")}
                       />
+                      {errors.permanentAddress && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.permanentAddress.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -914,17 +1108,21 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-sm-12">
                     <div>
-                      <label htmlFor="RoomNo" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="roomNo" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Room No
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="RoomNo"
+                        id="roomNo"
                         placeholder="Enter Room No"
-                        value={formData.RoomNo}
-                        onChange={handleChange}
+                        {...register("roomNo")}
                       />
+                      {errors.roomNo && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.roomNo.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -942,17 +1140,21 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-sm-6">
                     <div>
-                      <label htmlFor="DocumentName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="documentName" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Doc Name
                       </label>
                       <input
                         type="text"
                         className="form-control"
-                        id="DocumentName"
+                        id="documentName"
                         placeholder="Enter Doc Name"
-                        value={formData.DocumentName}
-                        onChange={handleChange}
+                        {...register("documentName")}
                       />
+                      {errors.documentName && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.documentName.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <DropZoneField label="Document File" file={documentFile} setFile={setDocumentFile} />
@@ -971,16 +1173,20 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-sm-12">
                     <div>
-                      <label htmlFor="Details" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="details" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Details
                       </label>
                       <textarea
-                        id="Details"
+                        id="details"
                         className="form-control"
                         placeholder="Enter details"
-                        value={formData.Details}
-                        onChange={handleChange}
+                        {...register("details")}
                       ></textarea>
+                      {errors.details && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.details.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -998,35 +1204,41 @@ export default function AddNewStudentPage() {
                 <div className="row gy-3">
                   <div className="col-sm-6">
                     <div>
-                      <label htmlFor="EmailAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="emailAddress" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Email Address <span className="text-danger-600">*</span>
                       </label>
                       <input
                         type="email"
                         className="form-control"
                         placeholder="Enter Login Email"
-                        id="EmailAddress"
-                        value={formData.EmailAddress}
-                        onChange={handleChange}
-                        required
+                        id="emailAddress"
+                        {...register("emailAddress")}
                       />
+                      {errors.emailAddress && (
+                        <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                          {errors.emailAddress.message}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="col-sm-6">
                     <div>
-                      <label htmlFor="Password" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
+                      <label htmlFor="password" className="text-sm fw-semibold text-primary-light d-inline-block mb-8">
                         Password <span className="text-danger-600">*</span>
                       </label>
                       <div className="position-relative">
                         <input
                           type="password"
-                          id="Password"
+                          id="password"
                           className="form-control"
                           placeholder="Enter your password"
-                          value={formData.Password}
-                          onChange={handleChange}
-                          required
+                          {...register("password")}
                         />
+                        {errors.password && (
+                          <span className="text-danger-600 text-sm mt-8 d-inline-block">
+                            {errors.password.message}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
