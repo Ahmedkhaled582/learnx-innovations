@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addStudentSchema, AddStudentFormValues } from "@/features/student/schema/studentSchema";
+import {  StudentFormValues, studentSchema } from "@/features/student/schema/studentSchema";
 import { useClasses } from "@/features/classes/hooks/useClass";
 import { useSections } from "@/features/sections/hooks/useSection";
 import { useCategories } from "@/features/category/hooks/useCategory";
@@ -78,7 +78,6 @@ export default function AddNewStudentPage() {
   const [motherPhoto, setMotherPhoto] = useState<File | null>(null);
   const [guardianPhoto, setGuardianPhoto] = useState<File | null>(null);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
-
   const [guardianType, setGuardianType] = useState<"father" | "mother" | "others">("others");
 
   const {
@@ -88,8 +87,8 @@ export default function AddNewStudentPage() {
     setValue,
     formState: { errors },
     reset,
-  } = useForm<AddStudentFormValues>({
-    resolver: zodResolver(addStudentSchema) as any,
+  } = useForm<StudentFormValues>({
+    resolver: zodResolver(studentSchema) as any,
     defaultValues: {
       admissionNumber: "",
       rollNumber: "",
@@ -142,7 +141,6 @@ export default function AddNewStudentPage() {
   const motherOccupation = watch("motherOccupation");
   const emailAddress = watch("emailAddress");
 
-  // Sync guardian fields if father or mother is selected
   React.useEffect(() => {
     if (guardianType === "father") {
       setValue("guardianName", fatherName || "");
@@ -175,8 +173,7 @@ export default function AddNewStudentPage() {
     setValue,
   ]);
 
-  // Handle Form Submission
-  const onSubmit = (data: AddStudentFormValues) => {
+  const onSubmit = (data: StudentFormValues) => {
     const finalData = { ...data };
     if (guardianType === "father") {
       finalData.guardianName = fatherName;
@@ -194,7 +191,6 @@ export default function AddNewStudentPage() {
 
     const payload = new FormData();
 
-    // Map camelCase form values to PascalCase backend keys
     payload.append("AdmissionNumber", finalData.admissionNumber || "");
     payload.append("RollNumber", finalData.rollNumber || "");
     payload.append("AcademicYear", finalData.academicYear || "Jun 2025/2026");
@@ -235,16 +231,6 @@ export default function AddNewStudentPage() {
     payload.append("PhoneNumber", finalData.phoneNumber || "");
     payload.append("Details", finalData.details || "");
     payload.append("Password", finalData.password || "");
-
-    // Default fields
-    payload.append("StudentImage", "");
-    payload.append("ParentId", "0");
-    payload.append("UserId", "");
-    payload.append("HostelId", "");
-    payload.append("FatherImage", "");
-    payload.append("MotherImage", "");
-    payload.append("GuardianImage", "");
-    payload.append("DocumentImage", "");
 
     // Append files
     if (studentPhoto) payload.append("StudentPhoto", studentPhoto);
